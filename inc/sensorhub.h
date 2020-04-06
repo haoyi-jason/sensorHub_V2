@@ -6,6 +6,7 @@
 #include "battery_mang.h"
 //#include "socket.h"
 #include "ff.h"
+#include "time_domain.h"
 
 #define APP_USE_RSI_WIFI
 #define APP_USE_RSI_BT
@@ -20,7 +21,7 @@
 #endif
 
 
-#define SW_VERSION_NUMBER       0x20032501
+#define SW_VERSION_NUMBER       0x20040601
 #define DATA_PATH_TRANMIT       0x01
 #define DATA_PATH_LOGSD         0x02
 
@@ -297,6 +298,8 @@ typedef struct{
   stream_io writefcn;
   stream_io readfcn;
   sd_config_t sdConfig;
+  _float_3d rms,peak,crest,velocity;
+  _float_3d hisRMS,hisPEAK;
 }app_param_t;
 
 

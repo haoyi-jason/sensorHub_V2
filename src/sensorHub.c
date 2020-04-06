@@ -46,7 +46,7 @@ static SPIConfig spicfg_adxl355 = {
   NULL,
   NULL,
   NULL,
-  SPI_CR1_BR_1
+  SPI_CR1_BR_2
 };
 static SPIConfig spicfg_rsi = {
   NULL,
@@ -158,7 +158,6 @@ static const ADCConversionGroup adcgrpcfg = {
   ADC_SQR3_SQ1_N(ADC_CHANNEL_IN10) | ADC_SQR3_SQ2_N(ADC_CHANNEL_IN11) | ADC_SQR3_SQ3_N(ADC_CHANNEL_IN12)
 };
 
-void app_start_config();
 int16_t write_bt_stream(uint8_t *d, size_t sz)
 {
 #ifdef RSI_BT_ENABLE
@@ -289,7 +288,7 @@ uint8_t app_read_param(uint8_t id,uint8_t *d, uint16_t *sz)
         cfg[i].temp = appParam.trh[i].temp;
         cfg[i].rh = appParam.trh[i].rh;
       }
-      *sz = 20;
+      *sz = 40;
     }break;
     case BAT_VOLT_ID:{
       battery_config_t *cfg = (battery_config_t*)d;
@@ -408,27 +407,6 @@ enum{
 };
 
 
-typedef void (*if_start)(void);
-if_start f;
-//static uint8_t rxBuf[64],txBuf[256];
-//void sensorHubInit(void)
-//{
-//  //spiStop(&SPID2);
-//  spiStop(&SPID3);
-//  adxlspi = &SPID3;
-//  bmispi = &SPID3;
-//  bmi160.read = bmi160_read;
-//  bmi160.write = bmi160_write;
-//  bmi160.delay_ms = bmi160_delay;
-//  bmi160.prev_accel_cfg.power = 0;
-//  bmi160.prev_gyro_cfg.power = 0;
-//  spiStart(bmispi,&spicfg_bmi160);
-//
-//  if(bmi160_cmd_init(&bmi160) == BMI160_OK){
-//    bmi160_cmd_testRead(&bmi160);
-//  }
-//}
-
 static virtual_timer_t vt;
 
 static void timeout_cb(void *arg)
@@ -463,64 +441,6 @@ static void blinker_cb(void *arg)
 
 uint32_t intCntr = 0;
 
-void validLogFileName(void)
-{
-//  chsnprintf(appParam.log_file.name,64,"%s_%04d_%02d_%02d_%02d-%02d-%02d.csv\0",
-//             moduleParam.sdcfg.prefix.log,
-//             appParam.tim_now.tm_year+1900,
-//             appParam.tim_now.tm_mon+1,
-//             appParam.tim_now.tm_mday,
-//             appParam.tim_now.tm_hour,
-//             appParam.tim_now.tm_min,
-//             appParam.tim_now.tm_sec);
-//  
-//  FRESULT fres;
-//  fres = f_open(&appParam.log_file.f,appParam.log_file.name,FA_WRITE | FA_CREATE_NEW);
-//  if(fres != FR_OK){
-//    while(1);
-//  }
-//  appParam.data_file.lastSync = appParam.data_file.f.fptr;
-}
-//void validDataFileName(void)
-//{
-//  chsnprintf(appParam.data_file.name,64,"%s_%04d_%02d_%02d_%02d-%02d-%02d.bin\0",
-//             moduleParam.sdcfg.prefix.data,
-//             appParam.tim_now.tm_year+1900,
-//             appParam.tim_now.tm_mon+1,
-//             appParam.tim_now.tm_mday,
-//             appParam.tim_now.tm_hour,
-//             appParam.tim_now.tm_min,
-//             appParam.tim_now.tm_sec);
-//  
-//  FRESULT fres;
-//  fres = f_open(&appParam.data_file.f,appParam.data_file.name,FA_READ | FA_WRITE | FA_CREATE_NEW);
-//  if(fres != FR_OK){
-//    while(1);
-//  }
-//  
-//  fres = f_lseek(&appParam.data_file.f,512);
-//  appParam.data_file.lastSync = appParam.data_file.f.fptr;
-//}
-void validDataFileNameHI(void)
-{
-//  chsnprintf(appParam.data_file_hi.name,64,"%s_%04d_%02d_%02d_%02d-%02d-%02d.bin\0",
-//             moduleParam.sdcfg.prefix.data_hr,
-//             appParam.tim_now.tm_year+1900,
-//             appParam.tim_now.tm_mon+1,
-//             appParam.tim_now.tm_mday,
-//             appParam.tim_now.tm_hour,
-//             appParam.tim_now.tm_min,
-//             appParam.tim_now.tm_sec);
-//  FRESULT fres;
-//  fres = f_open(&appParam.data_file_hi.f,appParam.data_file_hi.name,FA_WRITE | FA_CREATE_NEW);
-//  if(fres != FR_OK){
-//    while(1);
-//  }
-//  
-//  fres = f_lseek(&appParam.data_file_hi.f,512);
-//  appParam.data_file_hi.lastSync = appParam.data_file_hi.f.fptr;
-}
-
 
 enum{
   REPORT_NONE,
@@ -528,296 +448,16 @@ enum{
   REPORT_BATT
 };
 
-//void closeDataHir()
-//{
-//  f_close(&appParam.data_file_hi.f);
-//}
-
-
-
-//void closeLogFile()
-//{
-//  f_close(&appParam.log_file.f);
-//}
-
-//void report(uint8_t target)
-//{
-//  FRESULT fres;
-//  DWORD Size;
-//  DWORD fsize;
-//  double dv1,dv2;
-//  uint8_t buf[32];
-//  cmd_header_t *header = (cmd_header_t*)buf;
-//  switch(target){
-//  case REPORT_HT:
-//    dv1 = appParam.temp;
-//    dv2 = appParam.humidity;
-//    if((appParam.dataPath & DATA_PATH_LOGSD)
-//        && (appParam.sdConfig.capacity > 0)){
-//      char logMsg[64];
-//      chsnprintf(logMsg,64,"%04d/%02d/%02d,%02d:%02d:%02d,%08.3f,%08.3f\n",
-//                 appParam.tim_now.tm_year+1900,
-//                 appParam.tim_now.tm_mon+1,
-//                 appParam.tim_now.tm_mday,
-//                 appParam.tim_now.tm_hour,
-//                 appParam.tim_now.tm_min,
-//                 appParam.tim_now.tm_sec,
-//                 dv1,
-//                 dv2);
-//      //chMtxLock(&appParam.mtx_fs);
-//      //int fsize = writeLogFile(appParam.fileName.log,logMsg,strlen(logMsg));
-//      f_write(&appParam.log_file.f,logMsg,strlen(logMsg),&Size);
-//      //chMtxUnlock(&appParam.mtx_fs);
-//      fsize = appParam.log_file.f.obj.objsize;
-////      if((fsize > 0) && (fsize > moduleParam.sdcfg.szConstrain.log_size)){
-////        closeLogFile();
-////        validLogFileName();
-////      }
-//    }
-//      if(appParam.dataPath & DATA_PATH_TRANMIT){
-////        if(moduleParam.hub.mode == MODE_VSS){
-////  //        header = (cmd_header_t*)appParam.wbuf.ptr;
-////          header->magic1 = MAGIC1;
-////          header->magic2 = MAGIC2;
-////          header->type = MASK_DATA | DATA_ENV;
-////          header->len = 16 + CMD_STRUCT_SZ;
-////          header->pid = 0;
-////          memcpy((buf+CMD_STRUCT_SZ),(uint8_t*)&dv1,8);
-////          memcpy((buf+CMD_STRUCT_SZ+8),(uint8_t*)&dv2,8);
-////          header->chksum = cmd_checksum(buf,header->len);
-////        }
-//      }
-//    
-//    break;
-//  case REPORT_BATT:
-//      if(appParam.dataPath & DATA_PATH_TRANMIT){
-////        if(moduleParam.hub.mode == MODE_VSS){
-////        }
-//      }
-//    break;
-//  //default:
-//  }
-//  //chMtxUnlock(&appParam.mtx);
-//}
-
-
-
-
-
-
-
 /**
   working thread
 */
 
-//void app_stop_config()
-//{
-//  switch(moduleParam.hub.mode){
-//  case MODE_VSS_HI:
-//    extChannelDisable(&EXTD1,1);
-//    adxl355_powerdown(&adxl355);
-//    adxl355.config->intmask = 0;
-//    adxl355_set_interrupt(&adxl355);
-//    closeDataHir();
-//    closeLogFile();
-//    break;
-//  case MODE_VSS:
-//  default:
-//    extChannelDisable(&EXTD1,9);
-//    bmi160_cmd_deconfig_int(&bmi160);
-//    closeVSSLogFile();
-//    closeLogFile();
-//    break;
-//  }
-//}
-
-//void app_start_config(void)
-//{
-//  uint16_t odr;
-//  //appParam.wbuf.ptr = appParam.wbuf.buffer;
-//  //appParam.wbuf.pendSz = appParam.wbuf.sz = 0;    
-//  switch(moduleParam.hub.mode){
-//  case MODE_VSS_HI:
-//    if(appParam.dataPath == DATA_PATH_TRANMIT){
-//      appParam.sdBuffer.flushSize = (10 - adxl355.config->outputrate) * 90;
-//      if(appParam.sdBuffer.flushSize == 0) appParam.sdBuffer.flushSize = 90;
-//      if(appParam.sdBuffer.flushSize > 900) appParam.sdBuffer.flushSize = 900;
-//      if((moduleParam.hub.commType & COMM_USE_WIFI) == COMM_USE_WIFI){
-//        appParam.sdBuffer.flushSize = 1280;
-//      }
-//      else if((moduleParam.hub.commType & COMM_USE_BT) == COMM_USE_BT){
-//        appParam.sdBuffer.flushSize = 960;
-//      }
-//    }
-//    else{
-//      appParam.sdBuffer.flushSize = 250;
-//      validDataFileNameHI();
-//    }
-//    appParam.pid[DATA_HIR] = 0;
-//    adxl355_powerdown(&adxl355);
-//    adxl355.config->intmask = ADXL355_INT_FULL_EN1;
-//    adxl355_set_interrupt(&adxl355);
-//    adxl355_set_filter(&adxl355);
-//    adxl355_set_full_scale(&adxl355);
-//    extChannelEnable(&EXTD1,1);
-//    adxl355_powerup(&adxl355);
-//  break;
-//  case MODE_VSS_V2:
-//    adxl355_powerdown(&adxl355);
-//    adxl355.config->intmask = ADXL355_INT_FULL_EN1;
-//    adxl355_set_interrupt(&adxl355);
-//    adxl355_set_filter(&adxl355);
-//    adxl355_set_full_scale(&adxl355);
-//    extChannelEnable(&EXTD1,1);
-//    adxl355_powerup(&adxl355);
-//    appParam.pid[DATA_HIR] = 0;
-//  case MODE_VSS:
-//  default:
-//    
-//    odr = (1<<(moduleParam.bmi160.accel_cfg.odr - 6))*25;
-//    odr /= 20; // 20 Hz packet rate
-//    if(appParam.dataPath == DATA_PATH_TRANMIT){
-//      appParam.sdBuffer.flushSize = 600;
-//      appParam.pid[DATA] = 0;
-//      appParam.sdBuffer.flushSize = odr * 12;
-//      if(appParam.sdBuffer.flushSize > 600)
-//        appParam.sdBuffer.flushSize = 600;
-//
-//      if((moduleParam.hub.commType & COMM_USE_WIFI) == COMM_USE_WIFI){
-//        appParam.sdBuffer.flushSize = 600;
-//      }
-//      else if((moduleParam.hub.commType & COMM_USE_BT) == COMM_USE_BT){
-//        appParam.sdBuffer.flushSize = 600;
-//      }
-//    }
-//    else{
-//      appParam.sdBuffer.flushSize = SD_BUFFER_SIZE - CMD_STRUCT_SZ;
-//      validLogFileName();
-//      validDataFileName();
-//    }
-//
-//    // update sensor config
-//    bmi160_reconfig_by_app(&bmi160);
-//    // start bmi160 in fifo mode
-//    bmi160_cmd_config_int(&bmi160);
-//    extChannelEnable(&EXTD1,11);
-//  }
-//}
-
-//static       union bmi160_int_status interrupt;
-//static THD_WORKING_AREA(waWorking,1024);
-//static THD_FUNCTION(procWorking ,p)
-//{
-//  cmd_header_t *header;
-//  size_t sz;
-//  int32_t data[96];
-//  uint8_t *p_src,*p_dst;
-//  uint16_t bsz;
-//  systime_t t_start;
-////  appParam.sdBuffer.w = appParam.sdBuffer.buf_a+CMD_STRUCT_SZ;
-////  appParam.sdBuffer.length = 0;
-////  appParam.sdBuffer.id = 0;
-////  appParam.sdBuffer.transition = 0;
-//  app_start_config();
-//  while(!chThdShouldTerminateX()){
-//    eventmask_t evt = chEvtWaitAny(ALL_EVENTS);
-//    if(evt & EV_ADXL_FIFO_FULL){
-//      intCntr++;
-//      // read fifo data
-//      size_t sz; 
-//      //adxl.vmt_adxl355->get_fifo_size(&adxl,&sz);
-//      adxl355_get_fifo_size(&adxl355,&sz);
-//      sz = (sz/3)*3;
-//      if(sz){
-//        bsz = sz * 3;
-////        adxl355.buffer = appParam.sdBuffer.w;
-//        adxl355_read_fifo(&adxl355,bsz);
-////        memcpy((void*)appParam.sdBuffer.w,adxl355.buffer,bsz);
-////        appParam.sdBuffer.length += bsz;
-////        appParam.sdBuffer.w += bsz;
-//      }      
-//    }
-//    if(evt & EV_BMI_INT1){
-////      bmi160.fifo->data = appParam.sdBuffer.w;
-//      bmi160_get_fifo_data(&bmi160);
-//      int8_t v;
-//      uint16_t j;
-//      appParam.lig_file_size[2] = bmi160.fifo->length;
-//      appParam.lig_file_size[1] += bmi160.fifo->length;
-//      // copy data to temperary buffer, signal transfer thread
-//      // to decide write to SD card or transfer via communication interface
-//      
-//      //memcpy((void*)appParam.sdBuffer.w,bmi160.fifo->data,bmi160.fifo->length);
-////      appParam.sdBuffer.length += bmi160.fifo->length;
-////      appParam.sdBuffer.w += bmi160.fifo->length;
-//    }
-//    if(evt & EV_P7_EXINT){
-////      LED_ON();
-//      //ad7124_int_handler(&ad7124);
-////      LED_OFF();
-//    }
-//    
-//    // send data
-////    if(appParam.sdBuffer.length >= appParam.sdBuffer.flushSize){
-////      //LED_ON();
-////      appParam.sdBuffer.szToWrite = appParam.sdBuffer.length;
-////      appParam.sdBuffer.transition++;
-////      if(appParam.sdBuffer.id == 0){
-////        appParam.sdBuffer.r = appParam.sdBuffer.buf_a;
-////        appParam.sdBuffer.w = appParam.sdBuffer.buf_b+CMD_STRUCT_SZ;
-////        appParam.sdBuffer.length = 0;
-////        appParam.sdBuffer.id = 1;
-////      }else{
-////        appParam.sdBuffer.w = appParam.sdBuffer.buf_a+CMD_STRUCT_SZ;
-////        appParam.sdBuffer.r = appParam.sdBuffer.buf_b;
-////        appParam.sdBuffer.length = 0;
-////        appParam.sdBuffer.id = 0;
-////      }
-////      if(appParam.dataPath == DATA_PATH_TRANMIT){
-////        // prepare data transmit
-////        header = (cmd_header_t*)appParam.sdBuffer.r;
-////        header->magic1 = MAGIC1;
-////        header->magic2 = MAGIC2;
-////        switch(moduleParam.hub.mode){
-////        default:
-////        case MODE_VSS:
-////          header->type = MASK_DATA | DATA_VSS;
-////          break;
-////        case MODE_DOORSPEED:
-////          header->type = MASK_DATA | DATA_DOORSPEED;
-////          break;
-////        case MODE_VSS_HI:
-////          header->type = MASK_DATA | DATA_VSS_HI;
-////          break;
-////        }
-////        header->len = appParam.sdBuffer.szToWrite + CMD_STRUCT_SZ;
-////        header->pid = appParam.pid[0]++;
-////        header->chksum = cmd_checksum(appParam.sdBuffer.r,header->len);
-////        appParam.sdBuffer.szToWrite = header->len;
-////        if((moduleParam.hub.commType & COMM_USE_BT) == COMM_USE_BT){
-////            rsi_app_bt_sendptr(0,appParam.sdBuffer.r,header->len);
-////        }
-////        else if((moduleParam.hub.commType & COMM_USE_WIFI) == COMM_USE_WIFI){
-////            rsi_app_wlan_sendptr(appParam.clientSocket);
-////        }
-////      }else{
-////        chEvtSignal(appParam.fSThread,(msg_t)1);
-////      }
-////      //LED_OFF();
-////    }
-//  }
-//  app_stop_config(); 
-//  //chThdRelease(appParam.workingThread);
-//  //appParam.workingThread = NULL;
-//  chThdExit((msg_t)0);  
-//}
-//
-static THD_WORKING_AREA(waBufferHandle,1024);
+static THD_WORKING_AREA(waBufferHandle,2048);
 static THD_FUNCTION(procBufferHandler ,p)
 {
   cmd_header_t *header;
   size_t sz;
-  uint8_t buf[320];
+  uint8_t buf[1024];
   uint16_t bufSz = 0;
   int32_t data[96];
   uint8_t *p_src,*p_dst;
@@ -843,17 +483,19 @@ static THD_FUNCTION(procBufferHandler ,p)
           adxl355.buffer = &buf[bufSz];
           adxl355_read_fifo(&adxl355,bsz); // each record has 9-bytes (x/y/z)*3
           bufSz += bsz;
-          header = (cmd_header_t*)buf;
-          header->magic1 = MAGIC1;
-          header->magic2 = MAGIC2;
-          header->type = MASK_DATA;
-          header->len = bufSz;
-          header->pid = pktCount++;
-          header->chksum = cmd_checksum(buf,header->len);
-          if(appParam.writefcn){
-            appParam.writefcn(buf, header->len);
+          if(bufSz > 270){
+            header = (cmd_header_t*)buf;
+            header->magic1 = MAGIC1;
+            header->magic2 = MAGIC2;
+            header->type = MASK_DATA;
+            header->len = bufSz;
+            header->pid = pktCount++;
+            header->chksum = cmd_checksum(buf,header->len);
+            if(appParam.writefcn){
+              appParam.writefcn(buf, header->len);
+            }
+            bufSz = CMD_STRUCT_SZ;        
           }
-          bufSz = CMD_STRUCT_SZ;        
           break;
         case OP_VNODE:
           bsz = sz*9;
@@ -871,34 +513,42 @@ static THD_FUNCTION(procBufferHandler ,p)
               *(p_dst--)=*(p_src++);
             }
           }
-//          if(feed_fifo32(&m_timeDomain,(uint8_t*)data,sz)==1){
-//            resetObject(&m_timeDomain);
-//            // send data via WIFI/BT
-//            // prepare data transmit
-//            //appParam.sdBuffer.r = appParam.sdBuffer.buf_b;
-//            header = (cmd_header_t*)buf;
-//            header->magic1 = MAGIC1;
-//            header->magic2 = MAGIC2;
-//            header->type = MASK_DATA;
-//            header->pid = pktCount++;
-//            uint8_t *ptr = &buf[CMD_STRUCT_SZ];
-//            ptr += 12;
-//            header->len = 48 + CMD_STRUCT_SZ;
-//            header->chksum = cmd_checksum(buf,header->len);
-//            if(appParam.writefcn)
-//              appParam.writefcn(buf,header->len);
-//          }
+          if(feed_fifo32(&m_timeDomain,(uint8_t*)data,sz)==1){
+            memcpy((void*)&appParam.rms,(void*)&m_timeDomain.rms,12);
+            memcpy((void*)&appParam.crest,(void*)&m_timeDomain.crest,12);
+            memcpy((void*)&appParam.velocity,(void*)&m_timeDomain.velocity,12);
+            appParam.peak.x = (m_timeDomain.peak.x - m_timeDomain.peakn.x);
+            appParam.peak.y = (m_timeDomain.peak.y - m_timeDomain.peakn.y);
+            appParam.peak.z = (m_timeDomain.peak.z - m_timeDomain.peakn.z);
+            resetObject(&m_timeDomain);
+            // send data via WIFI/BT
+            // prepare data transmit
+            //appParam.sdBuffer.r = appParam.sdBuffer.buf_b;
+            header = (cmd_header_t*)buf;
+            header->magic1 = MAGIC1;
+            header->magic2 = MAGIC2;
+            header->type = MASK_DATA;
+            header->pid = pktCount++;
+            uint8_t *ptr = &buf[CMD_STRUCT_SZ];
+            memcpy(ptr,&appParam.peak,12);
+            ptr += 12;
+            memcpy(ptr,&appParam.rms,12);
+            ptr += 12;
+            memcpy(ptr,&appParam.crest,12);
+            ptr += 12;
+            memcpy(ptr,&appParam.velocity,12);
+            ptr += 12;
+            header->len = 48 + CMD_STRUCT_SZ;
+            header->chksum = cmd_checksum(buf,header->len);
+            if(appParam.writefcn)
+              appParam.writefcn(buf,header->len);
+          }
           break;
         case OP_LOGSD:
           bsz = sz*9; // read x/y/z combo
           adxl355.buffer = buf;
           adxl355_read_fifo(&adxl355,bsz); // each record has 9-bytes (x/y/z)*3
-          //bufSz += bsz;
           sd_write(buf,bsz);
-//          if(appParam.writefcn){
-//            appParam.writefcn(buf, header->len);
-//          }
-          //bufSz = CMD_STRUCT_SZ;        
           break;
         }
       }
@@ -921,10 +571,44 @@ static THD_FUNCTION(procBufferHandler ,p)
         }
         break;
       case OP_VNODE:
+        sz = 300/12;
+        bmi160.fifo->data = buf;
+        bmi160.fifo->length = 300;
+        bmi160_get_fifo_data(&bmi160);
+          if(feed_fifo16_imu(&m_timeDomain,(uint8_t*)buf,sz)==1){
+            memcpy((void*)&appParam.rms,(void*)&m_timeDomain.rms,12);
+            memcpy((void*)&appParam.crest,(void*)&m_timeDomain.crest,12);
+            memcpy((void*)&appParam.velocity,(void*)&m_timeDomain.velocity,12);
+            appParam.peak.x = (m_timeDomain.peak.x - m_timeDomain.peakn.x);
+            appParam.peak.y = (m_timeDomain.peak.y - m_timeDomain.peakn.y);
+            appParam.peak.z = (m_timeDomain.peak.z - m_timeDomain.peakn.z);
+            resetObject(&m_timeDomain);
+            // send data via WIFI/BT
+            // prepare data transmit
+            //appParam.sdBuffer.r = appParam.sdBuffer.buf_b;
+            header = (cmd_header_t*)buf;
+            header->magic1 = MAGIC1;
+            header->magic2 = MAGIC2;
+            header->type = MASK_DATA;
+            header->pid = pktCount++;
+            uint8_t *ptr = &buf[CMD_STRUCT_SZ];
+            memcpy(ptr,&appParam.peak,12);
+            ptr += 12;
+            memcpy(ptr,&appParam.rms,12);
+            ptr += 12;
+            memcpy(ptr,&appParam.crest,12);
+            ptr += 12;
+            memcpy(ptr,&appParam.velocity,12);
+            ptr += 12;
+            header->len = 48 + CMD_STRUCT_SZ;
+            header->chksum = cmd_checksum(buf,header->len);
+            if(appParam.writefcn)
+              appParam.writefcn(buf,header->len);
+          }
         break;
       case OP_LOGSD:
         bmi160.fifo->data = buf;
-        bmi160.fifo->length = 300;
+        bmi160.fifo->length = 900;
         bmi160_get_fifo_data(&bmi160);
         sd_write(buf,bmi160.fifo->length);
         break;
@@ -981,6 +665,22 @@ static void startTransfer(void)
     adxl355_powerup(&adxl355);
   }
   else if(appParam.node.activeSensor & BMI160_ENABLED){
+    float gScale;
+    if(appParam.imu.accel.range == 0x03){
+      gScale = 4.0/65536.;
+    }
+    else if(appParam.imu.accel.range == 0x05){
+      gScale = 8.0/65536.;
+    }
+    else if(appParam.imu.accel.range == 0x08){
+      gScale = 16.0/65536.;
+    }
+    else{
+      gScale = 32./65536.;
+    }
+    m_timeDomain.scale.x = gScale;
+    m_timeDomain.scale.y = gScale;
+    m_timeDomain.scale.z = gScale;
     spiStart(&SPID3,&spicfg_bmi160);
     bmi160.read = bmi160_read;
     bmi160.write = bmi160_write;
@@ -1100,10 +800,10 @@ static THD_FUNCTION(procSensorHub ,p)
       if(!appParam.bufferThread){
         i2cStart(&I2CD1,&i2ccfg);
         pca_set_channel(2);
-        htu2xinit(&I2CD1);
+        i2cStop(&I2CD1);
+        htu2xinit(&I2CD1,(I2CConfig*)&i2ccfg);
         appParam.trh[0].temp = sen_htu2xx_read_temp();
         appParam.trh[0].rh = sen_htu2xx_read_humidity();
-        i2cStop(&I2CD1);
         //appParam.battery_mv = ads1015_read_data(&ads1015)*2;
       }
 
@@ -1317,7 +1017,7 @@ static THD_FUNCTION(procSensorHub ,p)
 //      if(appParam.dataPath == DATA_PATH_TRANMIT){
         appParam.connState = 0x0;
         // stop working thread if any
-        if(appParam.bufferThread){
+        if(appParam.bufferThread && appParam.node.opMode != OP_LOGSD){
           stopTransfer();
         }
       appParam.ledBlink.ms_on = 1000;
